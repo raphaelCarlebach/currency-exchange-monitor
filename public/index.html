@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="./style/bootstrap.min.css">
+
+  <script type="module" src="./js/index.js" defer></script>
+
+  <title>currency exchange monitor</title>
+
+</head>
+
+<body>
+  <div class="container">
+    <h2>watched currencies:</h2>
+
+    <a class="btn btn-info my-3" href="newWatchedCurrencyForm.html">add new watched currency</a>
+
+    <button id="monitor" class="btn btn-success my-3">monitor</button>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Currency symbol</th>
+          <th>Threshold</th>
+        </tr>
+      </thead>
+      <tbody id="id_parent">
+      </tbody>
+    </table>
+  </div>
+</body>
+
+</html>
