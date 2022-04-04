@@ -1,21 +1,20 @@
 const doApiGet = require("../services/doApiGet");
-const dbConnection = require("../db/sqlConnect");
+const { select, insert } = require("../db/access");
 
 const monitor = async () => {
     let latestCurrencies_url = "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd.json";
-    let watchedCurrencies_url = "http://localhost:4000/watchedcurrency/all";
-
-    let watchedCurrencies = await doApiGet(watchedCurrencies_url);
     let latestCurrencies = await doApiGet(latestCurrencies_url);
+    let watchedCurrencies = await select("*", "watchedcurrencytbl", "").then(data => {
+        return data
+    });
 
     let watchedCurrenciesFound = 0;
     let newAlerts = 0;
 
     const alerts_arr = [];
 
-
     const found = new Promise((resolve, reject) => {
-        watchedCurrencies.data.forEach((currency, index) => {
+        watchedCurrencies.forEach((currency, index) => {
             //check if the watched currencys  are in the  latest  currency-api result
             Object.keys(latestCurrencies.data.usd).find(symbol => {
                 if (symbol === currency.CurrencySymbolFld) {
@@ -32,24 +31,18 @@ const monitor = async () => {
                         alerts_arr.push(alert_obj)
 
                         //  insert alert into db
-                        let query = `INSERT INTO alerttbl (CurrencySymbolFld,ValueToDateFld,TimestampFld) VALUES (?,?,?);`;
-                        dbConnection.query(query, [alert_obj.currencySymbol, alert_obj.valueToDate, alert_obj.timestamp], function (error, results, fields) {
-                            if (error) {
-                                newAlerts++
-                                console.log(error);
-                            } else {
-                                newAlerts++
-                                console.log(results)
-                            };
-
+                        insert("CurrencySymbolFld,ValueToDateFld,TimestampFld", "alerttbl", [alert_obj.currencySymbol, alert_obj.valueToDate, alert_obj.timestamp]).then((data) => {
+                            console.log(data)
+                            newAlerts++
                             // check if loop has finished
                             if (watchedCurrenciesFound == newAlerts) {
                                 resolve({
                                     msg: `there is ${newAlerts} new alerts`,
                                     data: alerts_arr
                                 })
-                            }
+                            };
                         });
+
                     } else {
                         //add anyway, threshold is equel to value
                         newAlerts++
@@ -63,7 +56,7 @@ const monitor = async () => {
                     }
                 } else {
                     // check if loop has finished and no currency has been found
-                    if (index == watchedCurrencies.data.length) {
+                    if (index == watchedCurrencies.length) {
                         resolve({
                             msg: `there is ${newAlerts} new alerts`,
                             data: alerts_arr
